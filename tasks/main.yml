@@ -1,13 +1,28 @@
 ---
 # file: roles/opendkim/tasks/main.yml
 
-- name: Install Packages
+- name: Install Packages (RedHat)
+  yum: >
+    pkg={{ item }}
+    state=latest
+  with_items:
+    - opendkim
+  when: ansible_os_family == 'RedHat'
+  notify:
+    - Restart Opendkim
+    - Restart Postfix
+  tags:
+    - opendkim
+    - email
+
+- name: Install Packages (Debian)
   apt: >
     pkg={{ item }}
     state=latest
   with_items:
     - opendkim
     - opendkim-tools
+  when: ansible_os_family == 'Debian'
   notify:
     - Restart Opendkim
     - Restart Postfix
@@ -38,7 +53,7 @@
     group='{{ opendkim_group }}'
     mode=0700
     state=directory
-  with_items: opendkim_domains
+  with_items: '{{ opendkim_domains }}'
   tags:
     - opendkim
     - email
@@ -48,7 +63,7 @@
       content: '{{ item.private_key }}'
       dest: '{{ opendkim_dir_keys.path }}/{{ item.name }}/{{ item.selector }}.private'
   when: item.private_key is defined and item.private_key != ''
-  with_items: opendkim_domains
+  with_items: '{{ opendkim_domains }}'
   tags:
     - opendkim
     - email
@@ -59,7 +74,7 @@
     chdir={{ opendkim_dir_keys.path }}/{{ item.name }}
     creates={{ opendkim_dir_keys.path }}/{{ item.name }}/{{ item.selector }}.private
   when: item.private_key is not defined or item.private_key == ''
-  with_items: opendkim_domains
+  with_items: '{{ opendkim_domains }}'
   register: opendkim_keys_generated
   tags:
     - opendkim
@@ -71,7 +86,7 @@
     dest={{ opendkim_local_keys_path }}/{{ item.name }}/{{ item.selector }}.private
     flat=yes
     fail_on_missing=yes
-  with_items: opendkim_domains
+  with_items: '{{ opendkim_domains }}'
   when: opendkim_save_keys_locally    
   tags:
     - opendkim
@@ -83,7 +98,7 @@
     dest={{ opendkim_local_keys_path }}/{{ item.name }}/{{ item.selector }}.public
     flat=yes
     fail_on_missing=no
-  with_items: opendkim_domains
+  with_items: '{{ opendkim_domains }}'
   when: opendkim_save_keys_locally    
   tags:
     - opendkim
@@ -92,7 +107,7 @@
 - name: Read Public Keys
   command: 'cat {{ opendkim_dir_keys.path }}/{{ item.item.name }}/{{ item.item.selector }}.txt'
   when: item|changed
-  with_items: opendkim_keys_generated.results
+  with_items: '{{ opendkim_keys_generated.results }}'
   register: opendkim_keys_generated_value
   tags:
     - opendkim
@@ -102,7 +117,7 @@
   debug: >
     msg='{{ item.stdout }}'
   when: item|changed
-  with_items: opendkim_keys_generated_value.results
+  with_items: '{{ opendkim_keys_generated_value.results }}'
 
   tags:
     - opendkim
@@ -116,7 +131,7 @@
     group='{{ opendkim_group }}'
     mode=0600
     state=file
-  with_items: opendkim_domains
+  with_items: '{{ opendkim_domains }}'
   tags:
     - opendkim
     - email
@@ -165,3 +180,8 @@
   tags:
     - opendkim
     - email
+
+- name: create pid directory
+  copy:
+    content: "d /var/run/opendkim 744 opendkim opendkim"
+    dest: /usr/lib/tmpfiles.d/opendkim.conf

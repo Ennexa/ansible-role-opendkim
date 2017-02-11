@@ -7,13 +7,5 @@ galaxy_info:
   company:
   license: license (MIT)
   min_ansible_version: 1.6
-  platforms:
-    - name: Ubuntu
-      versions:
-        - trusty
   categories:
     - system
-
-dependencies:
-  - MatthewMi11er.postfix
-
