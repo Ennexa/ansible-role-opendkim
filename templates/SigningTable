@@ -1,3 +1,4 @@
 {% for item in opendkim_domains %}
+*@{{ item.name }} {{ item.selector }}._domainkey.{{ item.name }}
 *@*.{{ item.name }} {{ item.selector }}._domainkey.{{ item.name }}
 {% endfor %}
