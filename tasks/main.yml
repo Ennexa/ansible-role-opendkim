@@ -2,11 +2,9 @@
 # file: roles/opendkim/tasks/main.yml
 
 - name: Install Packages (RedHat)
-  yum: >
-    pkg={{ item }}
-    state=latest
-  with_items:
-    - opendkim
+  package:
+    name: opendkim
+    state: latest
   when: ansible_os_family == 'RedHat'
   notify:
     - Restart Opendkim
@@ -16,12 +14,11 @@
     - email
 
 - name: Install Packages (Debian)
-  apt: >
-    pkg={{ item }}
-    state=latest
-  with_items:
-    - opendkim
-    - opendkim-tools
+  package:
+    name:
+      - opendkim
+      - opendkim-tools
+    state: latest
   when: ansible_os_family == 'Debian'
   notify:
     - Restart Opendkim
@@ -57,9 +54,9 @@
   tags:
     - opendkim
     - email
-    
+
 - name: Copy Private Keys
-  copy: 
+  copy:
       content: '{{ item.private_key }}'
       dest: '{{ opendkim_dir_keys.path }}/{{ item.name }}/{{ item.selector }}.private'
   when: item.private_key is defined and item.private_key != ''
@@ -79,15 +76,15 @@
   tags:
     - opendkim
     - email
-    
+
 - name: Save Private Keys Locally
   fetch: >
-    src={{ opendkim_dir_keys.path }}/{{ item.name }}/{{ item.selector }}.private 
+    src={{ opendkim_dir_keys.path }}/{{ item.name }}/{{ item.selector }}.private
     dest={{ opendkim_local_keys_path }}/{{ item.name }}/{{ item.selector }}.private
     flat=yes
     fail_on_missing=yes
   with_items: '{{ opendkim_domains }}'
-  when: opendkim_save_keys_locally    
+  when: opendkim_save_keys_locally | bool
   tags:
     - opendkim
     - email
@@ -99,24 +96,24 @@
     flat=yes
     fail_on_missing=no
   with_items: '{{ opendkim_domains }}'
-  when: opendkim_save_keys_locally    
+  when: opendkim_save_keys_locally | bool
   tags:
     - opendkim
     - email
-    
+
 - name: Read Public Keys
   command: 'cat {{ opendkim_dir_keys.path }}/{{ item.item.name }}/{{ item.item.selector }}.txt'
-  when: item|changed
+  when: item is changed
   with_items: '{{ opendkim_keys_generated.results }}'
   register: opendkim_keys_generated_value
   tags:
     - opendkim
     - email
-  
+
 - name: Output Public Keys
   debug: >
     msg='{{ item.stdout }}'
-  when: item|changed
+  when: item is changed
   with_items: '{{ opendkim_keys_generated_value.results }}'
 
   tags:
