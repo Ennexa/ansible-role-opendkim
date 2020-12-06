@@ -128,7 +128,7 @@
   when: item is changed
   with_items: '{{ opendkim_keys_generated_value.results }}'
   loop_control:
-    label: "{{ item.item.name }}"
+    label: "{{ item.item.item.name }}"
   tags:
     - opendkim
     - email
