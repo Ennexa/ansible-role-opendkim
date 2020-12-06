@@ -51,6 +51,8 @@
     mode=0700
     state=directory
   with_items: '{{ opendkim_domains }}'
+  loop_control:
+    label: "{{ item.name }}"
   tags:
     - opendkim
     - email
@@ -61,6 +63,8 @@
       dest: '{{ opendkim_dir_keys.path }}/{{ item.name }}/{{ item.selector }}.private'
   when: item.private_key is defined and item.private_key != ''
   with_items: '{{ opendkim_domains }}'
+  loop_control:
+    label: "{{ item.name }}"
   tags:
     - opendkim
     - email
@@ -73,6 +77,8 @@
   when: item.private_key is not defined or item.private_key == ''
   with_items: '{{ opendkim_domains }}'
   register: opendkim_keys_generated
+  loop_control:
+    label: "{{ item.name }}"
   tags:
     - opendkim
     - email
@@ -85,6 +91,8 @@
     fail_on_missing=yes
   with_items: '{{ opendkim_domains }}'
   when: opendkim_save_keys_locally | bool
+  loop_control:
+    label: "{{ item.name }}"
   tags:
     - opendkim
     - email
@@ -97,6 +105,8 @@
     fail_on_missing=no
   with_items: '{{ opendkim_domains }}'
   when: opendkim_save_keys_locally | bool
+  loop_control:
+    label: "{{ item.name }}"
   tags:
     - opendkim
     - email
@@ -129,6 +139,8 @@
     mode=0600
     state=file
   with_items: '{{ opendkim_domains }}'
+  loop_control:
+    label: "{{ item.name }}"
   tags:
     - opendkim
     - email
