@@ -116,6 +116,8 @@
   when: item is changed
   with_items: '{{ opendkim_keys_generated.results }}'
   register: opendkim_keys_generated_value
+  loop_control:
+    label: "{{ item.item.name }}"
   tags:
     - opendkim
     - email
@@ -125,7 +127,8 @@
     msg='{{ item.stdout }}'
   when: item is changed
   with_items: '{{ opendkim_keys_generated_value.results }}'
-
+  loop_control:
+    label: "{{ item.item.name }}"
   tags:
     - opendkim
     - email
